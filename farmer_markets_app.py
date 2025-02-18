@@ -27,40 +27,50 @@ class MainWindow(QWidget):
 
         layout = QGridLayout()
 
-        # header = QFrame(self)
-        # header.setStyleSheet(f"background-color: #2E86C1; height: {window_height/20}; width: {window_width};")
-        # layout.addWidget(header)
+        header = QFrame(self)
+        header.setStyleSheet(f"background-color: green")
+        layout.addWidget(header, 0, 0, 1, 5)
+        header.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         show_markets_button = QPushButton(text="Show all farmer's markets", parent=self)
-        layout.addWidget(show_markets_button, 0, 0, 1, 2)
+        layout.addWidget(show_markets_button, 1, 0, 1, 2)
+        show_markets_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         fmid_combo = QComboBox(self)
-        layout.addWidget(fmid_combo, 1, 0, 1, 1)
+        layout.addWidget(fmid_combo, 2, 0, 1, 1)
         fmid_combo.addItems(q.get_markets_fmids())
+        fmid_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         show_markets_by_fmid_button = QPushButton(text="show markets by fmid", parent=self)
-        layout.addWidget(show_markets_by_fmid_button, 1, 1, 1, 1)
+        layout.addWidget(show_markets_by_fmid_button, 2, 1, 1, 1)
+        show_markets_by_fmid_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         city_combo = QComboBox(self)
-        layout.addWidget(city_combo, 2, 0, 1, 1)
+        layout.addWidget(city_combo, 3, 0, 1, 1)
         city_combo.addItems(q.get_cities())
+        city_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         show_markets_by_city_button = QPushButton(text="show markets in city", parent=self)
-        layout.addWidget(show_markets_by_city_button, 2, 1, 1, 1)
+        layout.addWidget(show_markets_by_city_button, 3, 1, 1, 1)
+        show_markets_by_city_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         product_combo = QComboBox(self)
-        layout.addWidget(product_combo, 3, 0, 1, 1)
+        layout.addWidget(product_combo, 4, 0, 1, 1)
         product_combo.addItems(q.get_products())
+        product_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         show_markets_by_product = QPushButton(text="show markets by product", parent=self)
-        layout.addWidget(show_markets_by_product, 3, 1, 1, 1)
+        layout.addWidget(show_markets_by_product, 4, 1, 1, 1)
+        show_markets_by_product.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         payment_method_combo = QComboBox(self)
-        layout.addWidget(payment_method_combo, 4, 0, 1, 1)
+        layout.addWidget(payment_method_combo, 5, 0, 1, 1)
         payment_method_combo.addItems(q.get_payment_methods())
+        payment_method_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         show_market_by_payment_method_button = QPushButton(text="show markets by payment method", parent=self)
-        layout.addWidget(show_market_by_payment_method_button, 4, 1, 1, 1)
+        layout.addWidget(show_market_by_payment_method_button, 5, 1, 1, 1)
+        show_market_by_payment_method_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         webView = QWebEngineView()
 
@@ -75,12 +85,14 @@ class MainWindow(QWidget):
         ma.save(data, close_file=False)
 
         webView.setHtml(data.getvalue().decode())
-        layout.addWidget(webView, 0, 2, 3, 3)
+        layout.addWidget(webView, 1, 2, 3, 3)
         webView.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        webView.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         info_text = QTextEdit(self)
-        layout.addWidget(info_text, 3, 2, 2, 3)
-        info_text.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        layout.addWidget(info_text, 4, 2, 2, 3)
+        info_text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        #widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         self.setLayout(layout)
 
