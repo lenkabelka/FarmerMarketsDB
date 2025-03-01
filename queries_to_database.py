@@ -25,6 +25,7 @@ def fill_dbtable_from_csvfile(path_to_csvfile, table_name, columns):
 
     config = load_config()
     conn = db_connect(config)
+
     try:
         cur = conn.cursor()
 
@@ -92,10 +93,62 @@ def get_markets_in_city(city_name):
         config = load_config()
         conn = db_connect(config)
         cur = conn.cursor()
-        cur.execute("SELECT market_name FROM markets.markets WHERE city = %s;", (city_name,))
+        #cur.execute("SELECT market_name FROM markets.markets WHERE city = %s;", (city_name,))
 
+        cur.execute("SELECT markets.market_name FROM markets.markets "
+                    "JOIN markets.market_city ON markets.markets.fmid = markets.market_city.fmid "
+                    "JOIN markets.cities ON markets.market_city.city_id = markets.cities.city_id "
+                    "WHERE markets.cities.city_name = %s;", (city_name,))
+
+        print(f"Market(s) in city {city_name}:")
         for row in cur:
-            print(', '.join(row))
+            print(f"     {', '.join(row)}")
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
+def get_markets_in_state(state_name):
+
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        #cur.execute("SELECT market_name FROM markets.markets WHERE city = %s;", (city_name,))
+
+        cur.execute("SELECT markets.market_name FROM markets.markets "
+                    "JOIN markets.market_state ON markets.markets.fmid = markets.market_state.fmid "
+                    "JOIN markets.states ON markets.market_state.state_id = markets.states.state_id "
+                    "WHERE markets.states.state_name = %s;", (state_name,))
+
+        print(f"Market(s) in state {state_name}:")
+        for row in cur:
+            print(f"     {', '.join(row)}")
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
+def get_markets_in_country(country_name):
+
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        #cur.execute("SELECT market_name FROM markets.markets WHERE city = %s;", (city_name,))
+
+        cur.execute("SELECT markets.market_name FROM markets.markets "
+                    "JOIN markets.market_country ON markets.markets.fmid = markets.market_country.fmid "
+                    "JOIN markets.countries ON markets.market_country.country_id = markets.countries.country_id "
+                    "WHERE markets.countries.country_name = %s;", (country_name,))
+
+        print(f"Market(s) in state {country_name}:")
+        for row in cur:
+            print(f"     {', '.join(row)}")
 
         cur.close()
         conn.close()
@@ -151,6 +204,8 @@ def get_information_about_markets():
         "show_all_markets": show_all_markets,
         "get_information_about_market_by_fmid": get_information_about_market_by_fmid,
         "get_markets_in_city": get_markets_in_city,
+        "get_markets_in_state": get_markets_in_state,
+        "get_markets_in_country": get_markets_in_country,
         "get_markets_by_product": get_markets_by_product,
         "get_markets_by_payment_method": get_markets_by_payment_method
     }
@@ -158,8 +213,10 @@ def get_information_about_markets():
     parser = argparse.ArgumentParser()
     parser.add_argument("command", choices = possible_args_for_command_line.keys(), help="Choose a command to execute.")
 
-    parser.add_argument("--fmid", nargs="?", help="FMID to get information about market")
+    parser.add_argument("--fmid", help="FMID to get information about market")
     parser.add_argument("--city", help="markets in a city")
+    parser.add_argument("--country", help="markets in a country")
+    parser.add_argument("--state", help="markets in a state")
     parser.add_argument("--product", help="markets by product")
     parser.add_argument("--payment_method", help="markets by payment method")
     args = parser.parse_args()
@@ -171,6 +228,10 @@ def get_information_about_markets():
         get_information_about_market_by_fmid(args.fmid)
     elif args.command == "get_markets_in_city" and args.city:
         get_markets_in_city(args.city)
+    elif args.command == "get_markets_in_state" and args.state:
+        get_markets_in_state(args.state)
+    elif args.command == "get_markets_in_country" and args.country:
+        get_markets_in_country(args.country)
     elif args.command == "get_markets_by_product" and args.product:
         get_markets_by_product(args.product)
     elif args.command == "get_markets_by_payment_method" and args.payment_method:
