@@ -21,10 +21,10 @@ source_directory = Path("DB_Farmer_Markets")
 #source_directory = relative_path_to_source_csvfile.parent
 path_to_temp_new_csvfile = source_directory / "markets_table_with_duplicates.csv"
 
-list_of_columns = [0, 1, 2, 3, 4, 5, 6, 11, 10, 9, 8, 7, 20, 21, 12, 13, 14, 15, 16, 17, 18, 19]
+list_of_columns = [0, 1, 2, 3, 4, 5, 6, 11, 7, 20, 21]
 parser.make_csvfile_for_loading_in_database(absolute_path_to_source_csvfile,
                                             path_to_temp_new_csvfile,
-                                            list_of_columns)
+                                            list_of_columns, True)
 
 relative_path_to_csvfile_with_duplicates = Path("DB_Farmer_Markets/markets_table_with_duplicates.csv")
 absolute_path_to_csvfile_with_duplicates = relative_path_to_csvfile_with_duplicates.resolve()
@@ -48,7 +48,8 @@ list_of_columns = [0, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42
 path_to_temp_new_csvfile = source_directory / "temp_products.csv"
 parser.make_csvfile_for_loading_in_database(absolute_path_to_source_csvfile,
                                             path_to_temp_new_csvfile,
-                                            list_of_columns)
+                                            list_of_columns, True)
+
 
 relative_path_to_source_csvfile = Path("DB_Farmer_Markets/temp_products.csv")
 absolute_path_to_source_csvfile = relative_path_to_source_csvfile.resolve()
@@ -60,9 +61,133 @@ list_of_columns = [0, 23, 24, 25, 26, 27]
 path_to_temp_new_csvfile = source_directory / "temp_payment_methods.csv"
 parser.make_csvfile_for_loading_in_database(absolute_path_to_source_csvfile,
                                             path_to_temp_new_csvfile,
-                                            list_of_columns)
+                                            list_of_columns, True)
 
 relative_path_to_source_csvfile = Path("DB_Farmer_Markets/temp_payment_methods.csv")
 absolute_path_to_source_csvfile = relative_path_to_source_csvfile.resolve()
 path_to_new_csvfile = source_directory / "markets_payment_methods_table.csv"
 parser.make_csv_file_for_many_to_many_table(absolute_path_to_source_csvfile, path_to_new_csvfile)
+
+
+
+#######################################################################################################
+
+relative_path_to_source_csvfile = Path("Export.csv")
+
+fmid_cities_with_duplicates_with_none_with_multiple_values = source_directory / "fmid_cities_with_duplicates_with_none_with_multiple_values.csv"
+list_of_columns = [0, 8]
+parser.make_csvfile_for_loading_in_database(relative_path_to_source_csvfile,
+                                            fmid_cities_with_duplicates_with_none_with_multiple_values,
+                                            list_of_columns, True)
+
+fmid_cities_with_duplicates_with_none = source_directory / "fmid_cities_with_duplicates_with_none.csv"
+parser.find_rows_with_multiple_values(fmid_cities_with_duplicates_with_none_with_multiple_values, fmid_cities_with_duplicates_with_none)
+
+fmid_cities_with_duplicates_without_none = source_directory / "fmid_cities_with_duplicates_without_none.csv"
+parser.remove_empty_row_from_column(fmid_cities_with_duplicates_with_none, fmid_cities_with_duplicates_without_none, 1)
+
+fmid_city_without_duplicates = source_directory / "fmid_city_without_duplicates.csv"
+parser.remove_duplicates_in_csvfile(fmid_cities_with_duplicates_with_none, fmid_city_without_duplicates, 1)
+
+fmid_city = source_directory / "fmid_city.csv" #without_none
+parser.remove_empty_row_from_column(fmid_city_without_duplicates, fmid_city, 1)
+
+
+list_of_columns = [1]
+cities = source_directory / "cities.csv"
+parser.make_csvfile_for_loading_in_database(fmid_city,
+                                       cities,
+                                       list_of_columns, False)
+
+#make cities with id
+cities_with_id = source_directory / "cities_with_id.csv"
+parser.add_id_from_1(cities, cities_with_id)
+
+#make many-to-many fmid-city_id
+a = source_directory / "fmid_cities_with_duplicates_without_none.csv"
+b = source_directory / "cities_with_id.csv"
+c = source_directory / "fmid_city_id.csv"
+parser.make_many_to_many_table_from_two_csvfiles(a,
+                                            1,
+                                            0,
+                                            b,
+                                            1,
+                                            0,
+                                            c)
+
+#make fmid_country, countries
+list_of_columns = [0, 9]
+fmid_countries_with_duplicates_with_none = source_directory / "fmid_country_with_duplicates_with_none.csv"
+parser.make_csvfile_for_loading_in_database(relative_path_to_source_csvfile,
+                                            fmid_countries_with_duplicates_with_none,
+                                            list_of_columns, True)
+
+fmid_countries_with_duplicates_without_none = source_directory / "fmid_countries_with_duplicates_without_none.csv"
+parser.remove_empty_row_from_column(fmid_countries_with_duplicates_with_none, fmid_countries_with_duplicates_without_none, 1)
+
+fmid_country_without_duplicates = source_directory / "fmid_country_without_duplicates.csv"
+parser.remove_duplicates_in_csvfile(fmid_countries_with_duplicates_with_none, fmid_country_without_duplicates, 1)
+
+fmid_country = source_directory / "fmid_country.csv" #without none
+parser.remove_empty_row_from_column(fmid_country_without_duplicates, fmid_country, 1)
+
+list_of_columns = [1]
+countries = source_directory / "countries.csv"
+parser.make_csvfile_for_loading_in_database(fmid_country,
+                                            countries,
+                                            list_of_columns, False)
+
+#make countries with id
+countries_with_id = source_directory / "countries_with_id.csv"
+parser.add_id_from_1(countries, countries_with_id)
+
+#make many-to-many fmid-country_id
+a = source_directory / "fmid_countries_with_duplicates_without_none.csv"
+b = source_directory / "countries_with_id.csv"
+c = source_directory / "fmid_country_id.csv"
+parser.make_many_to_many_table_from_two_csvfiles(a,
+                                            1,
+                                            0,
+                                            b,
+                                            1,
+                                            0,
+                                            c)
+
+
+#make fmid-state, states
+list_of_columns = [0, 10]
+fmid_state_with_duplicates_with_none = source_directory / "fmid_state_with_duplicates_with_none.csv"
+parser.make_csvfile_for_loading_in_database(relative_path_to_source_csvfile,
+                                            fmid_state_with_duplicates_with_none,
+                                            list_of_columns, True)
+
+fmid_states_with_duplicates_without_none = source_directory / "fmid_states_with_duplicates_without_none.csv"
+parser.remove_empty_row_from_column(fmid_state_with_duplicates_with_none, fmid_states_with_duplicates_without_none, 1)
+
+fmid_state_without_duplicates = source_directory / "fmid_state_without_duplicates.csv"
+parser.remove_duplicates_in_csvfile(fmid_state_with_duplicates_with_none, fmid_state_without_duplicates, 1)
+
+fmid_state = source_directory / "fmid_state.csv" #without none
+parser.remove_empty_row_from_column(fmid_state_without_duplicates, fmid_state, 1)
+
+list_of_columns = [1]
+states = source_directory / "states.csv"
+parser.make_csvfile_for_loading_in_database(fmid_state,
+                                            states,
+                                            list_of_columns, False)
+
+states_with_id = source_directory / "states_with_id.csv"
+parser.add_id_from_1(states, states_with_id)
+
+
+#make many-to-many fmid-state_id
+a = source_directory / "fmid_states_with_duplicates_without_none.csv"
+b = source_directory / "states_with_id.csv"
+c = source_directory / "fmid_state_id.csv"
+parser.make_many_to_many_table_from_two_csvfiles(a,
+                                            1,
+                                            0,
+                                            b,
+                                            1,
+                                            0,
+                                            c)

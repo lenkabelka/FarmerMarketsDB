@@ -13,22 +13,72 @@ youtube varchar(200),
 other_media varchar(200),
 
 zip varchar(150),
-state varchar(150),
-country varchar(150),
-city varchar(150),
 street varchar(150),
 
 x float,
-y float,
+y float
+);
 
-Season1Date varchar(200),
-Season1Time varchar(200),
-Season2Date varchar(200),
-Season2Time varchar(200),
-Season3Date varchar(200),
-Season3Time varchar(200),
-Season4Date varchar(200),
-Season4Time varchar(200)
+CREATE TABLE markets.users
+(
+    user_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    user_nickname text NOT NULL UNIQUE,
+    password_hash text NOT NULL
+);
+
+CREATE TABLE markets.comments
+(
+    FMID int NOT NULL,
+    user_id int NOT NULL,
+    PRIMARY KEY (FMID, user_id),
+
+    FOREIGN KEY (FMID) REFERENCES markets.markets(FMID) ON DELETE CASCADE,
+    FOREIGN KEY (user_id) REFERENCES markets.users(user_id) ON DELETE CASCADE
+);
+
+CREATE TABLE markets.states
+(
+    state_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    state_name text NOT NULL UNIQUE
+);
+
+CREATE TABLE markets.market_state
+(
+    FMID int NOT NULL,
+    state_id int NOT NULL,
+    PRIMARY KEY (FMID, state_id),
+    FOREIGN KEY (FMID) REFERENCES markets.markets(FMID) ON DELETE CASCADE,
+    FOREIGN KEY (state_id) REFERENCES markets.states(state_id) ON DELETE CASCADE
+);
+
+CREATE TABLE markets.countries
+(
+    country_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    country_name text NOT NULL UNIQUE
+);
+
+CREATE TABLE markets.market_country
+(
+    FMID int NOT NULL,
+    country_id int NOT NULL,
+    PRIMARY KEY (FMID, country_id),
+    FOREIGN KEY (FMID) REFERENCES markets.markets(FMID) ON DELETE CASCADE,
+    FOREIGN KEY (country_id) REFERENCES markets.countries(country_id) ON DELETE CASCADE
+);
+
+CREATE TABLE markets.cities
+(
+    city_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    city_name text NOT NULL UNIQUE
+);
+
+CREATE TABLE markets.market_city
+(
+    FMID int NOT NULL,
+    city_id int NOT NULL,
+    PRIMARY KEY (FMID, city_id),
+    FOREIGN KEY (FMID) REFERENCES markets.markets(FMID) ON DELETE CASCADE,
+    FOREIGN KEY (city_id) REFERENCES markets.cities(city_id) ON DELETE CASCADE
 );
 
 CREATE TABLE markets.products
