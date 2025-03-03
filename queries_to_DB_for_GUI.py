@@ -125,9 +125,10 @@ def get_cities():
         config = load_config()
         conn = db_connect(config)
         cur = conn.cursor()
-        cur.execute("SELECT city FROM markets.markets")
+        cur.execute("SELECT city_name FROM markets.cities")
 
         cities = [' '.join(map(str, tpl)) for tpl in cur.fetchall()]
+        cities = sorted(cities)
 
         cur.close()
         conn.close()
@@ -135,3 +136,94 @@ def get_cities():
         print(f"Error occurred: {e}")
 
     return cities
+
+
+def get_countries():
+
+    countries = []
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        cur.execute("SELECT country_name FROM markets.countries")
+
+        countries = [' '.join(map(str, tpl)) for tpl in cur.fetchall()]
+        countries = sorted(countries)
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+    return countries
+
+
+def get_states():
+
+    states = []
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        cur.execute("SELECT state_name FROM markets.states")
+
+        states = [' '.join(map(str, tpl)) for tpl in cur.fetchall()]
+        states = sorted(states)
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+    return states
+
+
+def get_markets_in_city(city_name):
+
+    markets = []
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        #cur.execute("SELECT market_name FROM markets.markets WHERE city = %s;", (city_name,))
+
+        cur.execute("SELECT markets.market_name FROM markets.markets "
+                    "JOIN markets.market_city ON markets.markets.fmid = markets.market_city.fmid "
+                    "JOIN markets.cities ON markets.market_city.city_id = markets.cities.city_id "
+                    "WHERE markets.cities.city_name = %s;", (city_name,))
+        print(city_name)
+        markets = [' '.join(map(str, tpl)) for tpl in cur.fetchall()]
+        print(markets)
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+    return markets
+
+
+def get_lat_lon(market_name):
+
+    lat_lon = []
+    try:
+        config = load_config()
+        conn = db_connect(config)
+        cur = conn.cursor()
+        #cur.execute("SELECT x, y FROM markets.markets WHERE x IS NOT NULL AND y")
+
+        cur.execute("SELECT markets.y, markets.x FROM markets.markets "
+                    "JOIN markets.market_city ON markets.markets.fmid = markets.market_city.fmid "
+                    "JOIN markets.cities ON markets.market_city.city_id = markets.cities.city_id "
+                    "WHERE markets.x IS NOT NULL AND markets.y IS NOT NULL "
+                    "AND markets.markets.market_name = %s;", (market_name,))
+
+        lat_lon = [' '.join(map(str, tpl)) for tpl in cur.fetchall()]
+        print(lat_lon)
+
+        cur.close()
+        conn.close()
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+    return lat_lon
