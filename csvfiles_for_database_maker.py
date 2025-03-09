@@ -94,11 +94,13 @@ parser.remove_empty_row_from_column(fmid_city_without_duplicates, fmid_city, 1)
 
 
 list_of_columns = [1]
-cities = source_directory / "cities.csv"
+cities_with_duplicates = source_directory / "cities_with_duplicates.csv"
 parser.make_csvfile_for_loading_in_database(fmid_city,
-                                       cities,
+                                       cities_with_duplicates,
                                        list_of_columns, False)
 
+cities = source_directory / "cities.csv"
+parser.remove_duplicates_in_csvfile(cities_with_duplicates, cities, 0)
 #make cities with id
 cities_with_id = source_directory / "cities_with_id.csv"
 parser.add_id_from_1(cities, cities_with_id)

@@ -1,27 +1,23 @@
 import sys
-import os
-from functools import partial
-from pathlib import Path
+import sign_up as s
 import queries_to_DB_for_GUI as q
 from folium.plugins import FastMarkerCluster
 import io
 import folium
-from PyQt6.QtWidgets import (QApplication, QWidget, QLayout, QPushButton, QVBoxLayout, QBoxLayout, QGridLayout,
-                             QTextEdit, QLineEdit, QLabel, QListWidget, QFrame, QComboBox, QSizePolicy, QHBoxLayout,
-                             QListWidgetItem)
+from PyQt6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout, QGridLayout, QBoxLayout,
+                             QLineEdit, QLabel, QListWidget, QFrame, QComboBox, QSizePolicy,
+                             QHBoxLayout, QStackedLayout, QSpacerItem, QDialog, QMessageBox)
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontMetrics, QFont, QPixmap, QImage, QImageReader
+from PyQt6.QtGui import QFontMetrics, QFont
 from PyQt6.QtWebEngineWidgets import QWebEngineView
-
 
 
 class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        self.initialize()
 
+        self.setWindowTitle("Farmer's Markets")
 
-    def initialize(self):
         screen = QApplication.primaryScreen().geometry()
         coef_width = 0.8
         coef_height = 0.8
@@ -29,253 +25,403 @@ class MainWindow(QWidget):
         window_height = int(screen.height() * coef_height)
         self.resize(window_width, window_height)
         x = (screen.width() - window_width) // 2
-        y = (screen.height() - window_height) // 2
+        y = 0
+        #y = (screen.height() - window_height) // 2
         self.move(x, y)
+
+        self.user_name = ""
+        self.password_hash = ""
 
         layout = QGridLayout()
 
         font = QFont('Arial', 12)
         font_height = (QFontMetrics(font)).height()
         height_of_LineEdit = 2 * font_height
+        font_for_labels = QFont('Arial', 14)
 
-        head_layout_ = QHBoxLayout()
-        head_layout = QGridLayout()
+        button_style = """
+            QPushButton {
+                padding-left: 20px;
+                padding-right: 20px;
+                padding-top: 10px;
+                padding-bottom: 10px;
+                background-color: lightgrey;
+                border-radius: 10px;
+                border: 2px solid #8ea688;
+            }
+            QPushButton:hover {
+                background-color: lightblue;
+                border: 2px solid #8ea688;
+            }
+            QPushButton:pressed {
+                background-color: #8ea688;
+                border: 2px solid #8ea688;
+            }
+        """
 
-        picture_label = QLabel()
-        path_to_picture = Path(r"C:\Users\thimo23\PycharmProjects\FarmerMarketsDB\pictures\foods.png").resolve()
-        image = QImage("C:/Users/thimo23/PycharmProjects/FarmerMarketsDB/foods_j.png").scaled(300,100)
-        pixmap = QPixmap.fromImage(image)
-        if image.isNull():
-            print("Error: Failed to load image!")
-        picture_label.setPixmap(pixmap)
-        #picture_label.setScaledContents(True)
-
-        head_layout.addWidget(picture_label)
-
-        nickname = QLineEdit()
-        nickname.setPlaceholderText("nickname")
-        nickname.setFont(font)
-        nickname.setFixedHeight(height_of_LineEdit)
-        # print(nickname.sizePolicy().horizontalPolicy())
-        # print(nickname.sizePolicy().verticalPolicy())
-        password = QLineEdit()
-        password.setPlaceholderText("password")
-        password.setFont(font)
-        password.setFixedHeight(height_of_LineEdit)
-        login = QPushButton("Login")
-        login.setFont(font)
-        head_layout.addWidget(nickname, 0, 0, Qt.AlignmentFlag.AlignRight)
-        head_layout.addWidget(password, 1, 0, Qt.AlignmentFlag.AlignRight)
-        head_layout.addWidget(login, 2, 0, Qt.AlignmentFlag.AlignRight)
-
-        head_layout_.addWidget(picture_label)
-        head_layout_.addLayout(head_layout)
-
-        #layout.addLayout(head_layout, 0, 0, 1, 5)
-
-        # header = QFrame(self)
-        # header.setStyleSheet(f"background-color: green")
-        # layout.addWidget(header, 0, 0, 1, 5)
-        # header.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        layout_left = QGridLayout()
-
-        show_markets_button = QPushButton(text="Show all farmer's markets", parent=self)
-        show_markets_button.setFont(font)
-        #layout.addWidget(show_markets_button, 1, 0, 1, 2)
-        layout_left.addWidget(show_markets_button, 1, 0, 1, 2)
-        #show_markets_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        fmid_combo = QComboBox(self)
-        fmid_combo.setPlaceholderText("FMID")
-        fmid_combo.setFont(font)
-        #layout.addWidget(fmid_combo, 2, 0, 1, 1)
-        layout_left.addWidget(fmid_combo, 2, 0)
-        fmid_combo.addItems(q.get_markets_fmids())
-        #fmid_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_markets_by_fmid_button = QPushButton(text="show markets by FMID", parent=self)
-        show_markets_by_fmid_button.setFont(font)
-        #layout.addWidget(show_markets_by_fmid_button, 2, 1, 1, 1)
-        layout_left.addWidget(show_markets_by_fmid_button, 2, 1)
-        #show_markets_by_fmid_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        state_combo = QComboBox(self)
-        state_combo.setPlaceholderText("state")
-        state_combo.setFont(font)
-        #layout.addWidget(city_combo, 3, 0, 1, 1)
-        layout_left.addWidget(state_combo, 3, 0)
-        state_combo.addItems(q.get_states())
-        #city_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_markets_in_state_button = QPushButton(text="show markets in state", parent=self)
-        show_markets_in_state_button.setFont(font)
-        #layout.addWidget(show_markets_by_city_button, 3, 1, 1, 1)
-        layout_left.addWidget(show_markets_in_state_button, 3, 1)
-        #show_markets_by_city_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        country_combo = QComboBox(self)
-        country_combo.setPlaceholderText("country")
-        country_combo.setFont(font)
-        #layout.addWidget(city_combo, 3, 0, 1, 1)
-        layout_left.addWidget(country_combo, 4, 0)
-        country_combo.addItems(q.get_countries())
-        #city_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_markets_in_country_button = QPushButton(text="show markets in country", parent=self)
-        show_markets_in_country_button.setFont(font)
-        #layout.addWidget(show_markets_by_city_button, 3, 1, 1, 1)
-        layout_left.addWidget(show_markets_in_country_button, 4, 1)
-        #show_markets_by_city_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        city_combo = QComboBox(self)
-        city_combo.setPlaceholderText("city")
-        city_combo.setFont(font)
-        #layout.addWidget(city_combo, 3, 0, 1, 1)
-        layout_left.addWidget(city_combo, 5, 0)
-        city_combo.addItems(q.get_cities())
-        #city_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_markets_by_city_button = QPushButton(text="show markets in city", parent=self)
-        show_markets_by_city_button.setFont(font)
-        #layout.addWidget(show_markets_by_city_button, 3, 1, 1, 1)
-        layout_left.addWidget(show_markets_by_city_button, 5, 1)
-        #show_markets_by_city_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        city_name = city_combo.currentText()
-        #print(type(city_name))
-        #print(city_name)
-        show_markets_by_city_button.clicked.connect(lambda: q.get_markets_in_city(city_combo.currentText()))
-        #show_markets_by_city_button.clicked.connect(partial(q.get_markets_in_city, city_combo.currentText))
-
-        product_combo = QComboBox(self)
-        product_combo.setPlaceholderText("product")
-        product_combo.setFont(font)
-        #layout.addWidget(product_combo, 4, 0, 1, 1)
-        layout_left.addWidget(product_combo, 6, 0)
-        product_combo.addItems(q.get_products())
-        #product_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_markets_by_product = QPushButton(text="show markets by product", parent=self)
-        show_markets_by_product.setFont(font)
-        #layout.addWidget(show_markets_by_product, 4, 1, 1, 1)
-        layout_left.addWidget(show_markets_by_product, 6, 1)
-        #show_markets_by_product.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        payment_method_combo = QComboBox(self)
-        payment_method_combo.setPlaceholderText("payment method")
-        payment_method_combo.setFont(font)
-        #layout.addWidget(payment_method_combo, 5, 0, 1, 1)
-        layout_left.addWidget(payment_method_combo, 7, 0)
-        payment_method_combo.addItems(q.get_payment_methods())
-        #payment_method_combo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        show_market_by_payment_method_button = QPushButton(text="show markets by payment method", parent=self)
-        show_market_by_payment_method_button.setFont(font)
-        #layout.addWidget(show_market_by_payment_method_button, 5, 1, 1, 1)
-        layout_left.addWidget(show_market_by_payment_method_button, 7, 1)
-        #show_market_by_payment_method_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        list_of_markets_layout = QVBoxLayout()
-
-        list_of_markets_label = QLabel("List of markets:")
-        list_of_markets_label.setFont(font)
-
-        list_of_markets = QListWidget()
-        list_of_markets.setFont(font)
-
-        list_of_markets_layout.addWidget(list_of_markets_label)
-        list_of_markets_layout.addWidget(list_of_markets)
-        #list_of_markets_layout.setContentsMargins(20, 5, 5, 5)
-
-        def get_list_of_markets():
-            list_of_markets.clear()
-            list_of_markets.addItems(q.get_markets_in_city(city_combo.currentText()))
-
-        show_markets_by_city_button.clicked.connect(get_list_of_markets)
-
-        layout_left.addLayout(list_of_markets_layout, 8, 0, 1, 2)
+        text_field_style = """
+            QListWidget {
+                border: 2px solid #8ea688;
+                border-radius: 5px;
+                background-color: white;
+            }
+        """
 
 
+        self.frame = QFrame(self)
+        self.frame.setStyleSheet("background-color: #8ea688;")
+        self.head_layout = QHBoxLayout(self.frame)
 
 
-        layout_right = QVBoxLayout()
+        self.head_label_layout = QHBoxLayout()
+        self.head_label = QLabel("Buy only healthy food in Farmer's markets!", self.frame)
+        self.font_head_label = QFont('Comic Sans MS', 30)
+        self.head_label.setFont(self.font_head_label)
+        self.head_label_layout.addWidget(self.head_label)
 
-        webView = QWebEngineView()
+        self.frame_login_view = QFrame(self.frame)
+        self.frame_logout_view = QFrame(self.frame)
+        self.frame_login_view.setStyleSheet("background-color: #8ea688;")
+        self.frame_logout_view.setStyleSheet("background-color: #8ea688;")
+
+        self.head_layout_log_in = QGridLayout(self.frame_login_view)
+        self.head_layout_log_out = QGridLayout(self.frame_logout_view)
+        self.stack_layout = QStackedLayout()
+
+########### Log in view ####################################
+
+        self.login = QLineEdit()
+        self.login.setPlaceholderText("Login")
+        self.login.setFont(font)
+        self.login.setStyleSheet("background-color: white;")
+        self.login.setFixedHeight(height_of_LineEdit)
+
+        self.login_label = QLabel()
+
+        self.password = QLineEdit()
+        self.password.setPlaceholderText("Password")
+        self.password.setFont(font)
+        self.password.setStyleSheet("background-color: white;")
+        self.password.setFixedHeight(height_of_LineEdit)
+
+        self.login_button = QPushButton("Log in")
+        self.login_button.setFont(font)
+        self.login_button.setStyleSheet("background-color: white;")
+
+        self.sign_up_button = QPushButton("Sign up")
+        self.sign_up_button.setFont(font)
+        self.sign_up_button.setStyleSheet("background-color: white;")
+
+        self.head_layout_log_in.addWidget(self.login, 0, 0, Qt.AlignmentFlag.AlignRight)
+        self.head_layout_log_in.addWidget(self.password, 1, 0, Qt.AlignmentFlag.AlignRight)
+        self.head_layout_log_in.addWidget(self.login_button, 2, 0, Qt.AlignmentFlag.AlignRight)
+        self.head_layout_log_in.addWidget(self.sign_up_button, 3, 0, Qt.AlignmentFlag.AlignRight)
+
+        self.stack_layout.addWidget(self.frame_login_view)
+
+
+########### Log out view ####################################
+
+        self.logout_button = QPushButton("Log out")
+        self.logout_button.setFont(font)
+        self.logout_button.setStyleSheet("background-color: white;")
+
+
+        self.head_layout_log_out.addWidget(self.login_label, 0, 1, Qt.AlignmentFlag.AlignRight)
+        self.head_layout_log_out.addWidget(self.logout_button, 1, 1, Qt.AlignmentFlag.AlignRight)
+
+        self.stack_layout.addWidget(self.frame_logout_view)
+
+        self.head_layout.addLayout(self.head_label_layout)
+        self.head_layout.addLayout(self.stack_layout)
+
+#################################################################
+
+        self.layout_left = QGridLayout()
+
+        self.show_markets_button = QPushButton("Show all farmer's markets")
+        self.show_markets_button.setFont(font)
+        self.show_markets_button.setStyleSheet(button_style)
+        self.layout_left.addWidget(self.show_markets_button, 1, 0, 1, 2)
+
+        self.fmid_combo = QComboBox()
+        self.fmid_combo.setPlaceholderText("FMID")
+        self.fmid_combo.setFont(font)
+        self.layout_left.addWidget(self.fmid_combo, 2, 0)
+        self.fmid_combo.addItems(q.get_fmids())
+
+        self.show_markets_by_fmid_button = QPushButton("show market by FMID")
+        self.show_markets_by_fmid_button.setFont(font)
+        self.show_markets_by_fmid_button.setStyleSheet(button_style)
+        self.layout_left.addWidget(self.show_markets_by_fmid_button, 2, 1)
+
+        self.state_combo = QComboBox()
+        self.state_combo.setPlaceholderText("state")
+        self.state_combo.setFont(font)
+        self.layout_left.addWidget(self.state_combo, 3, 0)
+        self.state_combo.addItems(q.get_states())
+
+        self.show_markets_in_state_button = QPushButton("show markets in state")
+        self.show_markets_in_state_button.setFont(font)
+        self.show_markets_in_state_button.setStyleSheet(button_style)
+        self.layout_left.addWidget(self.show_markets_in_state_button, 3, 1)
+
+        self.country_combo = QComboBox()
+        self.country_combo.setPlaceholderText("county")
+        self.country_combo.setFont(font)
+        self.layout_left.addWidget(self.country_combo, 4, 0)
+        self.country_combo.addItems(q.get_countries())
+
+        self.show_markets_in_country_button = QPushButton("show markets in county")
+        self.show_markets_in_country_button.setFont(font)
+        self.show_markets_in_country_button.setStyleSheet(button_style)
+        self.layout_left.addWidget(self.show_markets_in_country_button, 4, 1)
+
+        self.city_combo = QComboBox()
+        self.city_combo.setPlaceholderText("city")
+
+        self.city_combo.setFont(font)
+        self.layout_left.addWidget(self.city_combo, 5, 0)
+        self.city_combo.addItems(q.get_cities())
+
+        self.show_markets_by_city_button = QPushButton("show markets in city")
+        self.show_markets_by_city_button.setFont(font)
+        self.show_markets_by_city_button.setStyleSheet(button_style)
+        self.layout_left.addWidget(self.show_markets_by_city_button, 5, 1)
+
+        self.product_combo = QComboBox()
+        self.product_combo.setPlaceholderText("product")
+        self.product_combo.setFont(font)
+        self.layout_left.addWidget(self.product_combo, 6, 0)
+        self.product_combo.addItems(q.get_products())
+
+        self.show_markets_by_product = QPushButton("show markets by product")
+        self.show_markets_by_product.setStyleSheet(button_style)
+        self.show_markets_by_product.setFont(font)
+        self.layout_left.addWidget(self.show_markets_by_product, 6, 1)
+
+        self.payment_method_combo = QComboBox()
+        self.payment_method_combo.setPlaceholderText("payment method")
+        self.payment_method_combo.setFont(font)
+        self.layout_left.addWidget(self.payment_method_combo, 7, 0)
+        self.payment_method_combo.addItems(q.get_payment_methods())
+
+        self.show_market_by_payment_method_button = QPushButton(text="show markets by payment method", parent=self)
+        self.show_market_by_payment_method_button.setFont(font)
+        self.layout_left.addWidget(self.show_market_by_payment_method_button, 7, 1)
+        self.show_market_by_payment_method_button.setStyleSheet(button_style)
+
+        self.list_of_markets_layout = QVBoxLayout()
+        self.list_of_markets_layout.setContentsMargins(0, 25, 0, 0)
+
+        self.list_of_markets_label = QLabel("List of markets:")
+        list_of_markets_label_font = QFont(font_for_labels)
+        self.list_of_markets_label.setFont(list_of_markets_label_font)
+        self.market_info_label = QLabel("(for detailed information, double-click on the market from the list)")
+        market_info_label_font = QFont('Arial', 11)
+        self.market_info_label.setFont(market_info_label_font)
+
+        self.list_of_markets = QListWidget()
+        self.list_of_markets.setFont(font)
+        self.list_of_markets.setStyleSheet(text_field_style)
+
+        self.list_of_markets_layout.addWidget(self.list_of_markets_label)
+        self.list_of_markets_layout.addWidget(self.market_info_label)
+        self.list_of_markets_layout.addWidget(self.list_of_markets)
+
+########################### Connections ###################################################################################################################
+
+        self.logout_button.clicked.connect(self.log_out)
+        self.login_button.clicked.connect(self.log_in)
+        self.sign_up_button.clicked.connect(self.sign_up)
+
+        self.list_of_markets.itemDoubleClicked.connect(q.get_info_about_market_by_market_name)
+        self.list_of_markets.itemDoubleClicked.connect(lambda item: self.updateMapMarkers(q.get_lat_lon(fmid=item.text().rsplit(" ", 1)[-1])))
+        self.list_of_markets.itemDoubleClicked.connect(
+            lambda item: q.get_information_about_market_by_fmid(item.text().rsplit(" ", 1)[-1]))
+
+        def get_info_about_market_by_fmid(item):
+            self.info_about_market.clear()
+            self.info_about_market.addItems(q.get_information_about_market_by_fmid(item.text().rsplit(" ", 1)[-1]))
+
+        self.list_of_markets.itemDoubleClicked.connect(get_info_about_market_by_fmid)
+
+        def get_list_of_markets(*, product_name = None,
+                                payment_method=None,
+                                state_name=None,
+                                country_name=None,
+                                city_name=None, fmid=None,
+                                all_markets_names=None):
+            self.list_of_markets.clear()
+            if state_name:
+                self.list_of_markets.addItems(q.get_markets_names(state_name=state_name))
+            elif country_name:
+                self.list_of_markets.addItems(q.get_markets_names(country_name=country_name))
+            elif city_name:
+                self.list_of_markets.addItems(q.get_markets_names(city_name=city_name))
+            elif fmid:
+                self.list_of_markets.addItems(q.get_markets_names(fmid=fmid))
+            elif product_name:
+                self.list_of_markets.addItems(q.get_markets_names(product_name=product_name))
+            elif payment_method:
+                self.list_of_markets.addItems(q.get_markets_names(payment_method=payment_method))
+            elif all_markets_names == "all_markets_names":
+                self.list_of_markets.addItems(q.get_markets_names(all_markets_names="all_markets_names"))
+            else:
+                print("Error: Specify one of the parameters - state_name, country_name, city_name or fmid")
+
+        self.show_markets_by_fmid_button.clicked.connect(
+            lambda: get_list_of_markets(fmid=self.fmid_combo.currentText()))
+        self.show_markets_by_city_button.clicked.connect(
+            lambda: get_list_of_markets(city_name=self.city_combo.currentText()))
+        self.show_markets_in_state_button.clicked.connect(
+            lambda: get_list_of_markets(state_name=self.state_combo.currentText()))
+        self.show_markets_in_country_button.clicked.connect(
+            lambda: get_list_of_markets(country_name=self.country_combo.currentText()))
+        self.show_markets_by_product.clicked.connect(
+            lambda: get_list_of_markets(product_name=self.product_combo.currentText()))
+        self.show_market_by_payment_method_button.clicked.connect(
+             lambda: get_list_of_markets(payment_method=self.payment_method_combo.currentText()))
+        self.show_markets_button.clicked.connect(
+            lambda: get_list_of_markets(all_markets_names="all_markets_names"))
+
+
+        self.show_markets_by_fmid_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(fmid=self.fmid_combo.currentText())))
+        self.show_markets_by_city_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(city_name=self.city_combo.currentText())))
+        self.show_markets_in_state_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(state_name=self.state_combo.currentText())))
+        self.show_markets_in_country_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(country_name=self.country_combo.currentText())))
+
+        self.show_markets_by_product.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(product_name=self.product_combo.currentText())))
+        self.show_market_by_payment_method_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(payment_method=self.payment_method_combo.currentText())))
+
+        self.show_markets_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(all_markets_names="all_markets")))
+
+###############################################################################################################################################################
+
+        self.layout_left.addLayout(self.list_of_markets_layout, 8, 0, 1, 2)
+
+        self.layout_right = QVBoxLayout()
+
+        self.webView = QWebEngineView()
 
         coordinate = (41.864268, -103.662538)
-        ma = folium.Map(
+        self.map_OSM = folium.Map(
             title='Map',
             zoom_start=3,
-            location=coordinate
+            location=coordinate,
+            attributionControl = 0
         )
 
         data = io.BytesIO()
-        ma.save(data, close_file=False)
+        self.map_OSM.save(data, close_file=False)
+        self.webView.setHtml(data.getvalue().decode())
 
-        webView.setHtml(data.getvalue().decode())
-        #layout.addWidget(webView, 1, 2, 3, 3)
-        layout_right.addWidget(webView)
-        webView.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        #webView.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        market_info_layout = QHBoxLayout()
+        self.layout_right.addWidget(self.webView)
 
-        info_about_market_layout = QVBoxLayout()
-        info_about_market_label = QLabel("Information about market:")
-        info_about_market_label.setFont(font)
-        info_about_market = QListWidget()
-        info_about_market_layout.addWidget(info_about_market_label)
-        info_about_market_layout.addWidget(info_about_market)
 
-        comments_layout = QVBoxLayout()
-        comments_label = QLabel("Comments:")
-        comments_label.setFont(font)
-        comments = QListWidget()
-        comments_layout.addWidget(comments_label)
-        comments_layout.addWidget(comments)
+        self.webView.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
 
-        market_info_layout.addLayout(info_about_market_layout)
-        market_info_layout.addLayout(comments_layout)
+        self.market_info_layout = QHBoxLayout()
 
-        #info_text = QTextEdit(self)
-        #layout.addWidget(info_text, 4, 2, 2, 3)
-        layout_right.addLayout(market_info_layout)
-        #info_text.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        #widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.info_about_market_layout = QVBoxLayout()
+        self.info_about_market_label = QLabel("Information about market:")
+        self.info_about_market_label.setFont(font_for_labels)
+        self.info_about_market_label.setStyleSheet(text_field_style)
+        self.info_about_market = QListWidget()
+        self.info_about_market.setFont(font)
+        self.info_about_market.setStyleSheet(text_field_style)
+        self.info_about_market_layout.addWidget(self.info_about_market_label)
+        self.info_about_market_layout.addWidget(self.info_about_market)
 
-        layout.addLayout(head_layout_, 0, 0, 1, 2)
-        layout.addLayout(layout_left, 1, 0, 1, 1)
-        layout.addLayout(layout_right, 1, 1, 1, 1)
+        self.comments_layout = QVBoxLayout()
+        self.comments_label = QLabel("Comments:")
+        self.comments_label.setFont(font_for_labels)
+        self.comments = QListWidget()
+        self.comments.setFont(font)
+        self.comments.setStyleSheet(text_field_style)
+        self.add_comment_button = QPushButton("Add comment")
+        self.add_comment_button.setFont(font)
+        self.add_comment_button.setStyleSheet(button_style)
+        self.comments_layout.addWidget(self.comments_label)
+        self.comments_layout.addWidget(self.comments)
+        self.comments_layout.addWidget(self.add_comment_button)
+
+        self.market_info_layout.addLayout(self.info_about_market_layout)
+        self.market_info_layout.addLayout(self.comments_layout)
+
+        self.layout_right.addLayout(self.market_info_layout)
+
+        layout.addWidget(self.frame, 0, 0, 1, 2)
+        layout.addLayout(self.layout_left, 1, 0, 1, 1)
+        layout.addLayout(self.layout_right, 1, 1, 1, 1)
+
+        self.stack_layout.setCurrentWidget(self.frame_login_view)
 
         self.setLayout(layout)
 
-        def updateMapMarkers(coordinates):
 
-            coordinate = (41.864268, -103.662538)
-            m = folium.Map(
-                title='Map',
-                zoom_start=3,
-                location=coordinate
-            )
-            #coordinates = q.show_all_markets_GUI()
-            FastMarkerCluster(data=coordinates).add_to(m)
+    def updateMapMarkers(self, coordinates_str):
 
-            print(len(coordinates))
+        coordinate = (41.864268, -103.662538)
+        m = folium.Map(
+            title='Map',
+            zoom_start=3,
+            location=coordinate,
+            attr="OpenStreetMap",
+            attributionControl=0
+        )
+        data = io.BytesIO()
+        m.save(data, close_file=False)
 
+        print(f"length_of_coordinates: {len(coordinates_str)}")
+        print(f"coordinates_str: {coordinates_str}")
+
+        if len(coordinates_str) == 1:
+            latitude = coordinates_str[0][0]
+            longitude = coordinates_str[0][1]
+            folium.Marker(
+                location=[latitude, longitude]
+            ).add_to(m)
+            html = m._repr_html_()
+            self.webView.setHtml(html)
+
+        elif len(coordinates_str) > 1:
+            FastMarkerCluster(data=coordinates_str).add_to(m)
             data = io.BytesIO()
             m.save(data, close_file=False)
-
             html = data.getvalue().decode()
-            webView.setHtml(html)
-
-        #show_markets_button.clicked.connect(updateMapMarkers)
-
-        def get_lat_lon_and_info(item_text):
-            coordinates = q.get_lat_lon(item_text)
-            updateMapMarkers(coordinates)
+            self.webView.setHtml(html)
 
 
-        list_of_markets.itemDoubleClicked.connect(lambda item: get_lat_lon_and_info(item.text()))
+    def log_out(self):
+        self.user_name = ""
+        self.password_hash = ""
+        self.stack_layout.setCurrentWidget(self.frame_login_view)
+
+
+    def sign_up(self):
+        dialog = s.SignUpDialog()
+        dialog.exec()
+
+
+    def log_in(self):
+        self.stack_layout.setCurrentWidget(self.frame_login_view)
+        user_name = self.login.text()
+        password_hash = self.password.text()
+
+        is_user_in_db = q.is_user_in_DB(user_name, password_hash)
+        font = QFont('Arial', 20)
+        if is_user_in_db:
+            self.user_name = user_name
+            self.password_hash = password_hash
+            self.login_label.setText(f"{self.user_name}, you are logged in!")
+            self.login_label.setFont(font)
+            self.stack_layout.setCurrentWidget(self.frame_logout_view)
+        else:
+            QMessageBox.warning(self, "Incorrect login/password", "Your login/password is not correct")
 
 
 app = QApplication(sys.argv)

@@ -30,9 +30,11 @@ def make_csvfile_for_loading_in_database(path_to_source_csvfile,
         with open(path_to_new_csvfile, mode='a', newline='') as new_file:
             writer = csv.writer(new_file)
             for row in reader:
+                row = [' '.join(cell.strip().split()) for cell in row]
                 row_for_new_csv = []
                 counter = 0
                 while counter < len(list_of_columns):
+                    #part_of_row = [' '.join(cell.strip().split()) for cell in row[list_of_columns[counter]]]
                     row_for_new_csv.append(row[list_of_columns[counter]])
                     counter += 1
                 writer.writerow(row_for_new_csv)
@@ -67,10 +69,15 @@ def remove_duplicates_in_csvfile(path_to_input_csvfile,
             writer = csv.writer(out_csvfile)
 
             for row in reader:
+                #row = [' '.join(cell.strip().split()) for cell in row]
                 key = row[number_of_column_with_unique_data]
                 if key not in seen_rows:
+                    print(f"______{key}")
                     seen_rows.add(key)
                     writer.writerow(row)
+
+            #for item in seen_rows:
+            #    print(f"______{item}")
 
 
 def remove_empty_row_from_column(path_to_input_csvfile, path_to_output_csvfile, number_of_column):
