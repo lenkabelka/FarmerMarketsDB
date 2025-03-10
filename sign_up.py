@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QDialog, QLineEdit, QPushButton, QVBoxLayout
-from PyQt6.QtGui import QFontMetrics, QFont
+from PyQt6.QtCore import QRegularExpression
+from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator
 import queries_to_DB_for_GUI as query
 
 
@@ -21,6 +22,9 @@ class SignUpDialog(QDialog):
         self.login.setFont(font)
         self.login.setStyleSheet("background-color: white;")
         self.login.setFixedHeight(height_of_LineEdit)
+        regex = QRegularExpression(r"^[a-zA-Z0-9_-]{0,25}$")
+        validator = QRegularExpressionValidator(regex)
+        self.login.setValidator(validator)
 
         self.password.setPlaceholderText("Password")
         self.password.setFont(font)

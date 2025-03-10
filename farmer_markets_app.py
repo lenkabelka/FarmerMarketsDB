@@ -7,8 +7,8 @@ import folium
 from PyQt6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout, QGridLayout, QBoxLayout,
                              QLineEdit, QLabel, QListWidget, QFrame, QComboBox, QSizePolicy,
                              QHBoxLayout, QStackedLayout, QSpacerItem, QDialog, QMessageBox)
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontMetrics, QFont
+from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 
@@ -95,6 +95,9 @@ class MainWindow(QWidget):
         self.login.setFont(font)
         self.login.setStyleSheet("background-color: white;")
         self.login.setFixedHeight(height_of_LineEdit)
+        regex = QRegularExpression(r"^[a-zA-Z0-9_-]{0,25}$")
+        validator = QRegularExpressionValidator(regex)
+        self.login.setValidator(validator)
 
         self.login_label = QLabel()
 
