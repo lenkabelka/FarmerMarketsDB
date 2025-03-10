@@ -150,15 +150,39 @@ def get_information_about_market_by_fmid(fmid):
         for row in cur:
             row_dict = {name_of_columns[i]: row[i] for i in range(len(row)) if row[i] is not None}
             for key, value in row_dict.items():
+                if key == "y":
+                    key = "latitude"
+                if key == "x":
+                    key = "longitude"
                 info_about_market.append(f"{key}:___ {value}")
                 print(f"{key}:___ {value}")
 
-        cur.execute("SELECT x, y, market_name FROM markets.markets "
-                    "WHERE x IS NOT NULL AND y IS NOT NULL AND fmid = %s;", (fmid,))
+        cur.execute("SELECT state_name FROM markets.states "
+                    "JOIN markets.market_state ON markets.market_state.state_id = markets.states.state_id "
+                    "JOIN markets.markets ON markets.market_state.fmid = markets.markets.fmid "
+                    "WHERE markets.markets.fmid = %s;", (fmid,))
 
-        lat_lon_name_dict = cur.fetchall()
+        state_name = cur.fetchone()[0]
 
-        print(info_about_market)
+        info_about_market.append(f"state:___ {state_name}")
+
+        cur.execute("SELECT country_name FROM markets.countries "
+                    "JOIN markets.market_country ON markets.market_country.country_id = markets.countries.country_id "
+                    "JOIN markets.markets ON markets.market_country.fmid = markets.markets.fmid "
+                    "WHERE markets.markets.fmid = %s;", (fmid,))
+
+        country_name = cur.fetchone()[0]
+
+        info_about_market.append(f"country:___ {country_name}")
+
+        cur.execute("SELECT city_name FROM markets.cities "
+                    "JOIN markets.market_city ON markets.market_city.city_id = markets.cities.city_id "
+                    "JOIN markets.markets ON markets.market_city.fmid = markets.markets.fmid "
+                    "WHERE markets.markets.fmid = %s;", (fmid,))
+
+        city_name = cur.fetchone()[0]
+
+        info_about_market.append(f"city:___ {city_name}")
 
         cur.close()
         conn.close()
@@ -347,3 +371,20 @@ def get_info_about_market_by_market_name(market_name): #market_name is QListItem
 
     except Exception as e:
         print(f"Error: {e}")
+
+
+def save_comment(comment_text, user_name, market_fmid):
+    try:
+        config = load_config()
+        with db_connect(config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM markets.users WHERE user_nickname = %s", (user_name,))
+                user_id = cur.fetchone()
+
+                cur.execute("INSERT INTO markets.users (fmid, user_id, comment_text) VALUES (%s, %s)", (market_fmid, user_id, comment_text))
+                conn.commit()
+                print("User saved successfully!")
+
+    except Exception as e:
+        print(f"Error: {e}")
+        conn.rollback()
