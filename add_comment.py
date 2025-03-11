@@ -1,10 +1,13 @@
 from PyQt6.QtWidgets import QWidget, QLabel, QTextEdit, QPushButton, QVBoxLayout, QLineEdit, QMessageBox, QDialog
 from PyQt6.QtGui import QFontMetrics, QFont, QGuiApplication, QRegularExpressionValidator, QIcon
-from PyQt6.QtCore import Qt, QRegularExpression
+from PyQt6.QtCore import Qt, QRegularExpression, pyqtSignal
 import queries_to_DB_for_GUI as query
 
 
 class AddComment(QDialog):
+
+    textSubmitted = pyqtSignal()
+
     def __init__(self, user_name, market_fmid, market_name):
         super().__init__()
 
@@ -101,4 +104,5 @@ class AddComment(QDialog):
             QMessageBox.warning(self, "Error", "Please, give a mark to the market!")
         else:
              query.save_comment(self.market_fmid, self.user_name, int(self.market_mark.text()), self.comment_text.toPlainText())
+             self.textSubmitted.emit()
              self.close()

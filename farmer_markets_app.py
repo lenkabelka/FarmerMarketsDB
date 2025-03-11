@@ -414,6 +414,12 @@ class MainWindow(QWidget):
 
             return
         add_comment_window = comment_class.AddComment(self.user_name, self.market_fmid, self.market_name)
+
+        def update_comments_list():
+            self.comments.clear()
+            self.comments.addItems(q.get_comments_by_fmid(self.market_fmid))
+
+        add_comment_window.textSubmitted.connect(update_comments_list)
         add_comment_window.exec()
 
 
