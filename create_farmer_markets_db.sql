@@ -28,9 +28,13 @@ CREATE TABLE markets.users
 
 CREATE TABLE markets.comments
 (
+    comment_id int GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     FMID int NOT NULL,
     user_id int NOT NULL,
-    PRIMARY KEY (FMID, user_id),
+    market_mark int,
+    comment_text text NOT NULL,
+    --PRIMARY KEY (FMID, user_id),
+
 
     FOREIGN KEY (FMID) REFERENCES markets.markets(FMID) ON DELETE CASCADE,
     FOREIGN KEY (user_id) REFERENCES markets.users(user_id) ON DELETE CASCADE
