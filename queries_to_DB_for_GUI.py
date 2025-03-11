@@ -68,6 +68,19 @@ def get_markets_names(*, product_name = None,
     return markets_name
 
 
+def get_market_name_by_fmid(fmid):
+    try:
+        config = load_config()
+        with db_connect(config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT market_name FROM markets.markets WHERE fmid = %s", (fmid,))
+                market_name = cur.fetchone()
+    except Exception as e:
+        print(f"Error: {e}")
+
+    return market_name[0]
+
+
 def get_lat_lon(*, product_name = None,
                 payment_method=None,market_name=None,
                 state_name=None, country_name=None,
@@ -359,32 +372,46 @@ def is_user_in_DB(user_name, password):
         return False
 
 
-def get_info_about_market_by_market_name(market_name): #market_name is QListItem
-    try:
-        market_name = market_name.text()
-        config = load_config()
-        with db_connect(config) as conn:
-            with conn.cursor() as cur:
-                cur.execute("SELECT * FROM markets.markets "
-                            "WHERE market_name = %s", (market_name,))
-                market = cur.fetchone()
-
-    except Exception as e:
-        print(f"Error: {e}")
-
-
-def save_comment(comment_text, user_name, market_fmid):
+def save_comment(market_fmid, user_name, market_mark, comment_text):
     try:
         config = load_config()
         with db_connect(config) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT 1 FROM markets.users WHERE user_nickname = %s", (user_name,))
+                cur.execute("SELECT user_id FROM markets.users WHERE user_nickname = %s", (user_name,))
                 user_id = cur.fetchone()
 
-                cur.execute("INSERT INTO markets.users (fmid, user_id, comment_text) VALUES (%s, %s)", (market_fmid, user_id, comment_text))
+                cur.execute("INSERT INTO markets.comments (fmid, user_id, market_mark, comment_text) "
+                            "VALUES (%s, %s, %s, %s)", (market_fmid, user_id, market_mark, comment_text))
                 conn.commit()
-                print("User saved successfully!")
+                print("Comment added successfully!")
 
     except Exception as e:
         print(f"Error: {e}")
         conn.rollback()
+
+
+def get_comments_by_fmid(fmid):
+    user_comments = []
+    try:
+        config = load_config()
+        with db_connect(config) as conn:
+            with conn.cursor() as cur:
+                cur.execute("SELECT markets.users.user_nickname, markets.comments.comment_text "
+                            "FROM markets.comments JOIN markets.users ON markets.comments.user_id = markets.users.user_id "
+                            "WHERE markets.comments.fmid = %s;", (fmid,))
+
+                results = cur.fetchall()
+                if results:
+                    for user_name, comment_text in results:
+                        user_comments.append(f"{user_name}: {comment_text}")
+                        #print(f"{user_name}: {comment_text}")
+
+                if user_comments:
+                    return user_comments
+                else:
+                    return ["There is no comments yet! Be the first to leave a comment!"]
+
+    except Exception as e:
+        print(f"Error: {e}")
+
+    return user_comments

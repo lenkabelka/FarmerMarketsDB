@@ -1,5 +1,6 @@
 import sys
 import sign_up as s
+import add_comment as comment_class
 import queries_to_DB_for_GUI as q
 from folium.plugins import FastMarkerCluster
 import io
@@ -8,7 +9,7 @@ from PyQt6.QtWidgets import (QApplication, QWidget, QPushButton, QVBoxLayout, QG
                              QLineEdit, QLabel, QListWidget, QFrame, QComboBox, QSizePolicy,
                              QHBoxLayout, QStackedLayout, QSpacerItem, QDialog, QMessageBox)
 from PyQt6.QtCore import Qt, QRegularExpression
-from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator
+from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator, QIcon
 from PyQt6.QtWebEngineWidgets import QWebEngineView
 
 
@@ -17,6 +18,7 @@ class MainWindow(QWidget):
         super().__init__()
 
         self.setWindowTitle("Farmer's Markets")
+        self.setWindowIcon(QIcon("pig.ico"))
 
         screen = QApplication.primaryScreen().geometry()
         coef_width = 0.8
@@ -30,7 +32,8 @@ class MainWindow(QWidget):
         self.move(x, y)
 
         self.user_name = ""
-        self.password_hash = ""
+        self.market_fmid = ""
+        self.market_name = ""
 
         layout = QGridLayout()
 
@@ -61,6 +64,18 @@ class MainWindow(QWidget):
 
         text_field_style = """
             QListWidget {
+                border: 2px solid #8ea688;
+                border-radius: 5px;
+                background-color: white;
+            }
+        """
+
+        combobox_style = """
+            QComboBox {
+                padding-left: 5px;
+                padding-right: 20px;
+                padding-top: 10px;
+                padding-bottom: 10px;
                 border: 2px solid #8ea688;
                 border-radius: 5px;
                 background-color: white;
@@ -103,6 +118,7 @@ class MainWindow(QWidget):
 
         self.password = QLineEdit()
         self.password.setPlaceholderText("Password")
+        self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setFont(font)
         self.password.setStyleSheet("background-color: white;")
         self.password.setFixedHeight(height_of_LineEdit)
@@ -150,6 +166,7 @@ class MainWindow(QWidget):
         self.fmid_combo = QComboBox()
         self.fmid_combo.setPlaceholderText("FMID")
         self.fmid_combo.setFont(font)
+        self.fmid_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.fmid_combo, 2, 0)
         self.fmid_combo.addItems(q.get_fmids())
 
@@ -161,6 +178,7 @@ class MainWindow(QWidget):
         self.state_combo = QComboBox()
         self.state_combo.setPlaceholderText("state")
         self.state_combo.setFont(font)
+        self.state_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.state_combo, 3, 0)
         self.state_combo.addItems(q.get_states())
 
@@ -172,6 +190,7 @@ class MainWindow(QWidget):
         self.country_combo = QComboBox()
         self.country_combo.setPlaceholderText("county")
         self.country_combo.setFont(font)
+        self.country_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.country_combo, 4, 0)
         self.country_combo.addItems(q.get_countries())
 
@@ -182,8 +201,8 @@ class MainWindow(QWidget):
 
         self.city_combo = QComboBox()
         self.city_combo.setPlaceholderText("city")
-
         self.city_combo.setFont(font)
+        self.city_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.city_combo, 5, 0)
         self.city_combo.addItems(q.get_cities())
 
@@ -195,6 +214,7 @@ class MainWindow(QWidget):
         self.product_combo = QComboBox()
         self.product_combo.setPlaceholderText("product")
         self.product_combo.setFont(font)
+        self.product_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.product_combo, 6, 0)
         self.product_combo.addItems(q.get_products())
 
@@ -206,6 +226,7 @@ class MainWindow(QWidget):
         self.payment_method_combo = QComboBox()
         self.payment_method_combo.setPlaceholderText("payment method")
         self.payment_method_combo.setFont(font)
+        self.payment_method_combo.setStyleSheet(combobox_style)
         self.layout_left.addWidget(self.payment_method_combo, 7, 0)
         self.payment_method_combo.addItems(q.get_payment_methods())
 
@@ -220,7 +241,7 @@ class MainWindow(QWidget):
         self.list_of_markets_label = QLabel("List of markets:")
         list_of_markets_label_font = QFont(font_for_labels)
         self.list_of_markets_label.setFont(list_of_markets_label_font)
-        self.market_info_label = QLabel("(for detailed information, double-click on the market from the list)")
+        self.market_info_label = QLabel("(For detailed information, double-click on the market from the list)")
         market_info_label_font = QFont('Arial', 11)
         self.market_info_label.setFont(market_info_label_font)
 
@@ -232,78 +253,9 @@ class MainWindow(QWidget):
         self.list_of_markets_layout.addWidget(self.market_info_label)
         self.list_of_markets_layout.addWidget(self.list_of_markets)
 
-########################### Connections ###################################################################################################################
-
-        self.logout_button.clicked.connect(self.log_out)
-        self.login_button.clicked.connect(self.log_in)
-        self.sign_up_button.clicked.connect(self.sign_up)
-
-        self.list_of_markets.itemDoubleClicked.connect(q.get_info_about_market_by_market_name)
-        self.list_of_markets.itemDoubleClicked.connect(lambda item: self.updateMapMarkers(q.get_lat_lon(fmid=item.text().rsplit(" ", 1)[-1])))
-        self.list_of_markets.itemDoubleClicked.connect(
-            lambda item: q.get_information_about_market_by_fmid(item.text().rsplit(" ", 1)[-1]))
-
-        def get_info_about_market_by_fmid(item):
-            self.info_about_market.clear()
-            self.info_about_market.addItems(q.get_information_about_market_by_fmid(item.text().rsplit(" ", 1)[-1]))
-
-        self.list_of_markets.itemDoubleClicked.connect(get_info_about_market_by_fmid)
-
-        def get_list_of_markets(*, product_name = None,
-                                payment_method=None,
-                                state_name=None,
-                                country_name=None,
-                                city_name=None, fmid=None,
-                                all_markets_names=None):
-            self.list_of_markets.clear()
-            if state_name:
-                self.list_of_markets.addItems(q.get_markets_names(state_name=state_name))
-            elif country_name:
-                self.list_of_markets.addItems(q.get_markets_names(country_name=country_name))
-            elif city_name:
-                self.list_of_markets.addItems(q.get_markets_names(city_name=city_name))
-            elif fmid:
-                self.list_of_markets.addItems(q.get_markets_names(fmid=fmid))
-            elif product_name:
-                self.list_of_markets.addItems(q.get_markets_names(product_name=product_name))
-            elif payment_method:
-                self.list_of_markets.addItems(q.get_markets_names(payment_method=payment_method))
-            elif all_markets_names == "all_markets_names":
-                self.list_of_markets.addItems(q.get_markets_names(all_markets_names="all_markets_names"))
-            else:
-                print("Error: Specify one of the parameters - state_name, country_name, city_name or fmid")
-
-        self.show_markets_by_fmid_button.clicked.connect(
-            lambda: get_list_of_markets(fmid=self.fmid_combo.currentText()))
-        self.show_markets_by_city_button.clicked.connect(
-            lambda: get_list_of_markets(city_name=self.city_combo.currentText()))
-        self.show_markets_in_state_button.clicked.connect(
-            lambda: get_list_of_markets(state_name=self.state_combo.currentText()))
-        self.show_markets_in_country_button.clicked.connect(
-            lambda: get_list_of_markets(country_name=self.country_combo.currentText()))
-        self.show_markets_by_product.clicked.connect(
-            lambda: get_list_of_markets(product_name=self.product_combo.currentText()))
-        self.show_market_by_payment_method_button.clicked.connect(
-             lambda: get_list_of_markets(payment_method=self.payment_method_combo.currentText()))
-        self.show_markets_button.clicked.connect(
-            lambda: get_list_of_markets(all_markets_names="all_markets_names"))
-
-
-        self.show_markets_by_fmid_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(fmid=self.fmid_combo.currentText())))
-        self.show_markets_by_city_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(city_name=self.city_combo.currentText())))
-        self.show_markets_in_state_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(state_name=self.state_combo.currentText())))
-        self.show_markets_in_country_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(country_name=self.country_combo.currentText())))
-
-        self.show_markets_by_product.clicked.connect(
-            lambda: self.updateMapMarkers(q.get_lat_lon(product_name=self.product_combo.currentText())))
-        self.show_market_by_payment_method_button.clicked.connect(
-            lambda: self.updateMapMarkers(q.get_lat_lon(payment_method=self.payment_method_combo.currentText())))
-
-        self.show_markets_button.clicked.connect(lambda: self.updateMapMarkers(q.get_lat_lon(all_markets_names="all_markets")))
-
-###############################################################################################################################################################
-
         self.layout_left.addLayout(self.list_of_markets_layout, 8, 0, 1, 2)
+
+
 
         self.layout_right = QVBoxLayout()
 
@@ -345,6 +297,10 @@ class MainWindow(QWidget):
         self.comments = QListWidget()
         self.comments.setFont(font)
         self.comments.setStyleSheet(text_field_style)
+        self.comments.setWordWrap(True)
+        self.comments.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.comments.setSpacing(5)
+
         self.add_comment_button = QPushButton("Add comment")
         self.add_comment_button.setFont(font)
         self.add_comment_button.setStyleSheet(button_style)
@@ -364,6 +320,101 @@ class MainWindow(QWidget):
         self.stack_layout.setCurrentWidget(self.frame_login_view)
 
         self.setLayout(layout)
+
+        self.add_comment_button.clicked.connect(self.add_comment)
+
+        ########################### Connections ###################################################################################################################
+
+        self.logout_button.clicked.connect(self.log_out)
+        self.login_button.clicked.connect(self.log_in)
+        self.sign_up_button.clicked.connect(self.sign_up)
+
+        self.list_of_markets.itemDoubleClicked.connect(
+            lambda item: self.updateMapMarkers(q.get_lat_lon(fmid=item.text().rsplit(" ", 1)[-1])))
+
+
+        def get_info_about_market_by_fmid(item):
+            self.info_about_market.clear()
+            self.market_fmid = item.text().rsplit(" ", 1)[-1]
+            self.market_name = q.get_market_name_by_fmid(self.market_fmid)
+            self.info_about_market.addItems(q.get_information_about_market_by_fmid(self.market_fmid))
+
+            self.comments.clear()
+            self.comments.addItems(q.get_comments_by_fmid(self.market_fmid))
+
+        self.list_of_markets.itemDoubleClicked.connect(get_info_about_market_by_fmid)
+
+
+        def get_list_of_markets(*, product_name=None,
+                                payment_method=None,
+                                state_name=None,
+                                country_name=None,
+                                city_name=None, fmid=None,
+                                all_markets_names=None):
+            self.list_of_markets.clear()
+            if state_name:
+                self.list_of_markets.addItems(q.get_markets_names(state_name=state_name))
+            elif country_name:
+                self.list_of_markets.addItems(q.get_markets_names(country_name=country_name))
+            elif city_name:
+                self.list_of_markets.addItems(q.get_markets_names(city_name=city_name))
+            elif fmid:
+                self.list_of_markets.addItems(q.get_markets_names(fmid=fmid))
+            elif product_name:
+                self.list_of_markets.addItems(q.get_markets_names(product_name=product_name))
+            elif payment_method:
+                self.list_of_markets.addItems(q.get_markets_names(payment_method=payment_method))
+            elif all_markets_names == "all_markets_names":
+                self.list_of_markets.addItems(q.get_markets_names(all_markets_names="all_markets_names"))
+            else:
+                print("Error: Specify one of the parameters - state_name, country_name, city_name or fmid")
+
+        self.show_markets_by_fmid_button.clicked.connect(
+            lambda: get_list_of_markets(fmid=self.fmid_combo.currentText()))
+        self.show_markets_by_city_button.clicked.connect(
+            lambda: get_list_of_markets(city_name=self.city_combo.currentText()))
+        self.show_markets_in_state_button.clicked.connect(
+            lambda: get_list_of_markets(state_name=self.state_combo.currentText()))
+        self.show_markets_in_country_button.clicked.connect(
+            lambda: get_list_of_markets(country_name=self.country_combo.currentText()))
+        self.show_markets_by_product.clicked.connect(
+            lambda: get_list_of_markets(product_name=self.product_combo.currentText()))
+        self.show_market_by_payment_method_button.clicked.connect(
+            lambda: get_list_of_markets(payment_method=self.payment_method_combo.currentText()))
+        self.show_markets_button.clicked.connect(
+            lambda: get_list_of_markets(all_markets_names="all_markets_names"))
+
+        self.show_markets_by_fmid_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(fmid=self.fmid_combo.currentText())))
+        self.show_markets_by_city_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(city_name=self.city_combo.currentText())))
+        self.show_markets_in_state_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(state_name=self.state_combo.currentText())))
+        self.show_markets_in_country_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(country_name=self.country_combo.currentText())))
+
+        self.show_markets_by_product.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(product_name=self.product_combo.currentText())))
+        self.show_market_by_payment_method_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(payment_method=self.payment_method_combo.currentText())))
+
+        self.show_markets_button.clicked.connect(
+            lambda: self.updateMapMarkers(q.get_lat_lon(all_markets_names="all_markets")))
+
+    ###############################################################################################################################################################
+
+
+    def add_comment(self):
+        if not self.user_name:
+            QMessageBox.warning(self, "You need to be logged in", "You need to be logged in to add a comment!")
+
+            return
+        if not self.market_fmid:
+            QMessageBox.warning(self, "No market chosed", "Please, chose one of the markets from a markets list!")
+
+            return
+        add_comment_window = comment_class.AddComment(self.user_name, self.market_fmid, self.market_name)
+        add_comment_window.exec()
 
 
     def updateMapMarkers(self, coordinates_str):
@@ -401,7 +452,7 @@ class MainWindow(QWidget):
 
     def log_out(self):
         self.user_name = ""
-        self.password_hash = ""
+        #self.password_hash = ""
         self.stack_layout.setCurrentWidget(self.frame_login_view)
 
 

@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QDialog, QLineEdit, QPushButton, QVBoxLayout
+from PyQt6.QtWidgets import QDialog, QLineEdit, QPushButton, QVBoxLayout, QMessageBox
 from PyQt6.QtCore import QRegularExpression
-from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator
+from PyQt6.QtGui import QFontMetrics, QFont, QRegularExpressionValidator, QIcon
 import queries_to_DB_for_GUI as query
 
 
@@ -9,6 +9,7 @@ class SignUpDialog(QDialog):
         super().__init__()
 
         self.setWindowTitle("Sign up")
+        self.setWindowIcon(QIcon("pig.ico"))
 
         self.login = QLineEdit()
         self.password = QLineEdit()
@@ -27,6 +28,7 @@ class SignUpDialog(QDialog):
         self.login.setValidator(validator)
 
         self.password.setPlaceholderText("Password")
+        self.password.setEchoMode(QLineEdit.EchoMode.Password)
         self.password.setFont(font)
         self.password.setStyleSheet("background-color: white;")
         self.password.setFixedHeight(height_of_LineEdit)
@@ -44,6 +46,10 @@ class SignUpDialog(QDialog):
 
 
     def sign_up(self):
-        login_text = self.login.text()
-        password_text = self.password.text()
-        query.save_user(login_text, password_text)
+        if not self.password.text().strip():
+            QMessageBox.warning(self, "Error", "Password cannot be empty!")
+        else:
+            login_text = self.login.text()
+            password_text = self.password.text()
+            query.save_user(login_text, password_text)
+            self.close()
