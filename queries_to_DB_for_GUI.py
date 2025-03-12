@@ -409,7 +409,7 @@ def get_comments_by_fmid(fmid):
                 if user_comments:
                     return user_comments
                 else:
-                    return ["There is no comments yet! Be the first to leave a comment!"]
+                    return ["There are no comments yet! Be the first to leave a comment!"]
 
     except Exception as e:
         print(f"Error: {e}")
