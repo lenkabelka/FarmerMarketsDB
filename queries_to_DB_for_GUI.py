@@ -396,14 +396,15 @@ def get_comments_by_fmid(fmid):
         config = load_config()
         with db_connect(config) as conn:
             with conn.cursor() as cur:
-                cur.execute("SELECT markets.users.user_nickname, markets.comments.comment_text "
+                cur.execute("SELECT markets.users.user_nickname, TO_CHAR(created_at, 'DD-MM-YYYY'), markets.comments.comment_text "
                             "FROM markets.comments JOIN markets.users ON markets.comments.user_id = markets.users.user_id "
-                            "WHERE markets.comments.fmid = %s;", (fmid,))
+                            "WHERE markets.comments.fmid = %s "
+                            "ORDER BY markets.comments.created_at DESC;", (fmid,))
 
                 results = cur.fetchall()
                 if results:
-                    for user_name, comment_text in results:
-                        user_comments.append(f"{user_name}: {comment_text}")
+                    for user_name, date, comment_text in results:
+                        user_comments.append(f"{user_name} [{date}]: {comment_text}")
                         #print(f"{user_name}: {comment_text}")
 
                 if user_comments:

@@ -33,6 +33,7 @@ CREATE TABLE markets.comments
     user_id int NOT NULL,
     market_mark int,
     comment_text text NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     --PRIMARY KEY (FMID, user_id),
 
 
